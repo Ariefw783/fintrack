@@ -158,25 +158,27 @@
                     
                     <div class="p-6">
                         <div class="text-center mb-6">
-                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Estimasi Batas Maksimum</p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">Estimasi Batas Harian Maksimum</p>
                             <h2 id="calc-daily" class="text-5xl font-black text-indigo-600 mb-1">Rp 0</h2>
-                            <p class="text-[10px] text-slate-400 italic">Agar saldo cukup sampai gajian berikutnya</p>
+                            <p> ——————————————————— </p>
+                            <p class="text-slate-400 text-xs font-bold uppercase mb-1">AGAR SALDO CUKUP SAMPAI GAJIAN SELANJUTNYA</p>
+                            
                         </div>
                         
                         <div class="grid grid-cols-2 gap-4 mb-6">
                             <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
                                 <span id="calc-days" class="block text-3xl font-black text-slate-800">0</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Hari Lagi</span>
+                                <span class="text-[13px] font-bold text-slate-400 uppercase">Hari Lagi</span>
                             </div>
                             <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100 text-center">
                                 <span id="calc-percent" class="block text-3xl font-black text-slate-800">0%</span>
-                                <span class="text-[10px] font-bold text-slate-400 uppercase">Progres bulan ini</span>
+                                <span class="text-[13px] font-bold text-slate-400 uppercase">Progres bulan ini</span>
                             </div>
                         </div>
 
                         <div class="space-y-1">
                             <div class="flex justify-between text-[10px] font-bold text-slate-500 uppercase">
-                                <span>Progress Bulan</span>
+                                <span>Progress Bulan ini menuju bulan selanjutnya</span>
                                 <span id="calc-label-percent">0%</span>
                             </div>
                             <div class="w-full bg-slate-100 rounded-full h-4 p-1 shadow-inner">
@@ -748,9 +750,12 @@
         window.addFixedExpenses = async () => {
             if (!currentUser) return;
             const fixed = [
-                { desc: "BPJS Kesehatan", amount: 110000 },
-                { desc: "Bensin + Rokok", amount: 200000 },
-                { desc: "WIFI Home", amount: 170000 }
+                { desc: "BPJS", amount: 110000 },
+                { desc: "Bensin + Rokok", amount: 190000 },
+                { desc: "WIFI", amount: 170000 },
+                { desc: "Paket Data", amount: 30000 },
+                { desc: "BANK Admin", amount: 15000 },
+                { desc: "Lain-lain", amount: 10000 }
             ];
             const batchPromises = fixed.map(item => {
                 return addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions'), {
@@ -790,4 +795,3 @@
     </script>
 </body>
 </html>
-
