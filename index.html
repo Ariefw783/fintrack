@@ -42,8 +42,6 @@
             border: 1px solid rgba(255, 255, 255, 0.5);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
         }
-        .hide-scroll::-webkit-scrollbar { display: none; }
-        .hide-scroll { -ms-overflow-style: none; scrollbar-width: none; }
         
         /* Animation Blink */
         @keyframes blink-animation {
@@ -143,10 +141,10 @@
 
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
-                            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-wider mb-2">Total Cashbon (Catatan)</p>
-                            <h4 id="display-debt" class="text-xl font-bold text-warning">Rp 0</h4>
+                            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-wider mb-2">Total Cashbon</p>
+                            <h4 id="display-debt" class="text-xl font-bold text-orange-500">Rp 0</h4>
                             <div class="w-full bg-slate-100 rounded-full h-1 mt-3">
-                                <div class="bg-warning h-1 rounded-full" style="width: 100%"></div>
+                                <div class="bg-orange-500 h-1 rounded-full" style="width: 100%"></div>
                             </div>
                         </div>
                         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
@@ -215,10 +213,10 @@
                         </div>
                         <div class="md:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
                             <h4 class="text-xs font-black text-indigo-600 uppercase mb-3 flex items-center gap-2">
-                                <i class="fas fa-lightbulb"></i> Tips & Analisa
+                                <i class="fas fa-lightbulb"></i> Analisa & Tips Cerdas
                             </h4>
-                            <div id="ai-analysis-text" class="text-[11px] leading-relaxed text-slate-600 space-y-2">
-                                <p>Sedang menghitung data...</p>
+                            <div id="ai-analysis-text" class="text-[11px] leading-relaxed text-slate-600 space-y-3">
+                                <p>Menghitung data Anda...</p>
                             </div>
                         </div>
                     </div>
@@ -306,7 +304,8 @@
                                 <option value="gaji">Gaji Bulanan</option>
                                 <option value="pemasukan">Pemasukan Lain</option>
                                 <option value="pengeluaran">Pengeluaran</option>
-                                <option value="cashbon">Cashbon (Catatan)</option>
+                                <option value="cashbon">Pemberian Cashbon (Catatan)</option>
+                                <option value="bayar_cashbon">Terima Bayar Cashbon (Masuk ke Saldo)</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -321,7 +320,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Keterangan</label>
-                    <input type="text" id="inp-desc" placeholder="Contoh: Belanja Bulanan" class="w-full bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:border-primary" required>
+                    <input type="text" id="inp-desc" placeholder="Contoh: Belanja Bulanan atau Nama Peminjam" class="w-full bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:border-primary" required>
                 </div>
 
                 <div>
@@ -366,7 +365,7 @@
                         <p class="text-slate-500 mt-1 uppercase tracking-widest font-bold" id="report-subtitle">Periode: Bulan Ini</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-black text-primary italic">FINTRACK PRO</div>
+                        <div class="text-2xl font-black text-primary italic">FINTRACK by ARFWCVK</div>
                         <p class="text-[10px] text-slate-400 mt-1" id="report-date">Generated: Now</p>
                     </div>
                 </div>
@@ -496,7 +495,8 @@
         const renderDashboard = () => {
             let totalIncome = 0;
             let totalExpense = 0;
-            let totalDebt = 0;
+            let totalDebt = 0; // Piutang yang diberikan
+            let totalPaidDebt = 0; // Piutang yang dikembalikan
             
             const tbody = document.getElementById('transaction-table-body');
             const emptyState = document.getElementById('empty-state');
@@ -513,10 +513,10 @@
                             <td class="px-6 py-4 font-semibold">${tx.desc}</td>
                             <td class="px-6 py-4">
                                 <span class="text-[10px] font-black px-2 py-1 rounded-lg uppercase ${getBadgeColor(tx.type)}">
-                                    ${tx.type}
+                                    ${tx.type.replace('_', ' ')}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right font-black ${ (tx.type === 'pemasukan' || tx.type === 'gaji') ? 'text-success' : 'text-danger'}">
+                            <td class="px-6 py-4 text-right font-black ${ (tx.type === 'pemasukan' || tx.type === 'gaji' || tx.type === 'bayar_cashbon') ? 'text-success' : (tx.type === 'cashbon' ? 'text-orange-500' : 'text-danger')}">
                                 ${formatIDR(tx.amount)}
                             </td>
                             <td class="px-6 py-4 text-center">
@@ -531,19 +531,28 @@
             }
 
             allTransactions.forEach(tx => {
-                if (tx.type === 'pemasukan' || tx.type === 'gaji') totalIncome += tx.amount;
-                else if (tx.type === 'pengeluaran') totalExpense += tx.amount;
-                else if (tx.type === 'cashbon') {
-                    // Cashbon is now just a note, not part of balance calculation
+                if (tx.type === 'pemasukan' || tx.type === 'gaji') {
+                    totalIncome += tx.amount;
+                } else if (tx.type === 'pengeluaran') {
+                    totalExpense += tx.amount;
+                } else if (tx.type === 'cashbon') {
+                    // Hanya sebagai catatan piutang, tidak masuk ke saldo/pengeluaran
                     totalDebt += tx.amount;
+                } else if (tx.type === 'bayar_cashbon') {
+                    // Piutang dibayar, uang masuk ke saldo
+                    totalPaidDebt += tx.amount;
+                    totalIncome += tx.amount;
                 }
             });
 
             const currentBalance = totalIncome - totalExpense;
+            // Sisa Cashbon = Total piutang diberikan - Total piutang dibayar
+            const netDebt = Math.max(0, totalDebt - totalPaidDebt);
+
             document.getElementById('display-balance').innerText = formatIDR(currentBalance);
             document.getElementById('display-income').innerText = formatIDR(totalIncome);
             document.getElementById('display-expense').innerText = formatIDR(totalExpense);
-            document.getElementById('display-debt').innerText = formatIDR(totalDebt);
+            document.getElementById('display-debt').innerText = formatIDR(netDebt);
             document.getElementById('display-savings').innerText = formatIDR(Math.max(0, currentBalance));
             
             const savingsPercent = totalIncome > 0 ? (currentBalance / totalIncome) * 100 : 0;
@@ -551,7 +560,7 @@
 
             updateCalculatorUI(currentBalance);
             updateCharts();
-            generateFinancialInsights(currentBalance, totalIncome, totalExpense, totalDebt);
+            generateFinancialInsights(currentBalance, totalIncome, totalExpense, netDebt);
         };
 
         const updateCalculatorUI = (balance = 0) => {
@@ -576,30 +585,30 @@
             else dailyEl.className = 'text-5xl font-black text-indigo-600 mb-1 animate-blink';
         };
 
-        const generateFinancialInsights = (balance, income, expense, debt) => {
+        const generateFinancialInsights = (balance, income, expense, netDebt) => {
             const container = document.getElementById('ai-analysis-text');
             const ratio = income > 0 ? (expense / income) * 100 : 0;
             
             let html = "";
             if (income === 0) {
-                html = "<p><i class='fas fa-info-circle text-primary'></i> Belum ada pemasukan bulan ini. Segera catat gaji Anda!</p>";
+                html = "<div class='flex gap-2'><i class='fas fa-info-circle text-primary mt-1'></i> <p>Belum ada pemasukan yang tercatat. Segera masukkan data Gaji agar analisa aktif.</p></div>";
             } else {
                 if (ratio > 80) {
-                    html += `<p class='text-danger font-bold'><i class='fas fa-exclamation-triangle'></i> Pengeluaran kritis! Sudah mencapai ${Math.round(ratio)}% dari pemasukan.</p>`;
-                    html += "<p>💡 Tips: Tunda keinginan belanja non-primer dan fokus pada kebutuhan pokok saja.</p>";
+                    html += `<div class='flex gap-2'><i class='fas fa-exclamation-triangle text-danger mt-1'></i> <p class='text-danger font-bold'>Waspada! Pengeluaran sudah mencapai ${Math.round(ratio)}% dari pendapatan.</p></div>`;
+                    html += "<p>👉 Batasi belanja non-primer dan prioritaskan tagihan wajib agar sisa saldo cukup.</p>";
                 } else if (ratio > 50) {
-                    html += `<p class='text-warning font-bold'><i class='fas fa-check-circle'></i> Keuangan stabil (${Math.round(ratio)}%), namun waspada pengeluaran mendadak.</p>`;
-                    html += "<p>💡 Tips: Cobalah sisihkan 10% saldo sekarang ke tabungan darurat sebelum terpakai.</p>";
+                    html += `<div class='flex gap-2'><i class='fas fa-chart-line text-warning mt-1'></i> <p class='text-warning font-bold'>Cukup Aman. Pengeluaran di angka ${Math.round(ratio)}%.</p></div>`;
+                    html += "<p>👉 Coba alokasikan sisa saldo ke tabungan darurat minimal 10% hari ini.</p>";
                 } else {
-                    html += `<p class='text-success font-bold'><i class='fas fa-smile-beam'></i> Kondisi sehat! Pengeluaran baru ${Math.round(ratio)}%.</p>`;
-                    html += "<p>💡 Tips: Momentum bagus untuk investasi atau melunasi sisa tagihan jika ada.</p>";
+                    html += `<div class='flex gap-2'><i class='fas fa-check-circle text-success mt-1'></i> <p class='text-success font-bold'>Kesehatan keuangan sangat baik (${Math.round(ratio)}%).</p></div>`;
+                    html += "<p>👉 Momentum yang bagus untuk melakukan investasi atau belanja kebutuhan yang tertunda.</p>";
                 }
             }
 
-            if (debt > 0) {
-                html += `<div class='mt-3 pt-2 border-t border-slate-200'>
-                    <p class='font-bold text-slate-800'>Catatan Cashbon:</p>
-                    <p class='text-orange-600'>Anda memiliki catatan piutang sebesar <b>${formatIDR(debt)}</b>. Pastikan ini segera tertagih agar tidak mengganggu arus kas.</p>
+            if (netDebt > 0) {
+                html += `<div class='mt-4 p-3 bg-white rounded-xl border border-slate-200'>
+                    <p class='font-bold text-slate-800 text-xs mb-1 uppercase tracking-wider'>Status Piutang:</p>
+                    <p class='text-orange-600 font-medium'>Masih ada tagihan cashbon senilai <b>${formatIDR(netDebt)}</b> yang belum kembali.</p>
                 </div>`;
             }
 
@@ -623,7 +632,7 @@
             filteredData.sort((a,b) => new Date(a.date) - new Date(b.date));
             
             const labels = filteredData.map(t => moment(t.date).format('DD MMM'));
-            const incomeData = filteredData.map(t => (t.type === 'pemasukan' || t.type === 'gaji') ? t.amount : 0);
+            const incomeData = filteredData.map(t => (t.type === 'pemasukan' || t.type === 'gaji' || t.type === 'bayar_cashbon') ? t.amount : 0);
             const expenseData = filteredData.map(t => t.type === 'pengeluaran' ? t.amount : 0);
 
             if (financeChartInstance) financeChartInstance.destroy();
@@ -634,7 +643,7 @@
                     labels: labels,
                     datasets: [
                         {
-                            label: 'Masuk',
+                            label: 'Pemasukan',
                             data: incomeData,
                             borderColor: '#10b981',
                             backgroundColor: 'rgba(16, 185, 129, 0.1)',
@@ -644,7 +653,7 @@
                             pointBackgroundColor: '#10b981'
                         },
                         {
-                            label: 'Keluar',
+                            label: 'Pengeluaran',
                             data: expenseData,
                             borderColor: '#ef4444',
                             backgroundColor: 'rgba(239, 68, 68, 0.1)',
@@ -691,27 +700,21 @@
             let categories = {};
 
             filtered.forEach(tx => {
-                const isIncome = (tx.type === 'pemasukan' || tx.type === 'gaji');
-                const isCashbon = (tx.type === 'cashbon');
-
+                const isInc = (tx.type === 'pemasukan' || tx.type === 'gaji' || tx.type === 'bayar_cashbon');
                 tbody.innerHTML += `
                     <tr class="border-b border-slate-50">
                         <td class="px-6 py-4 font-medium">${moment(tx.date).format('DD/MM/YYYY')}</td>
                         <td class="px-6 py-4 font-bold text-slate-800">${tx.desc}</td>
-                        <td class="px-6 py-4 uppercase text-[10px] font-black text-slate-400">${tx.type}</td>
-                        <td class="px-6 py-4 text-right font-black ${ isIncome ? 'text-emerald-600' : (isCashbon ? 'text-orange-600' : 'text-rose-600')}">${formatIDR(tx.amount)}</td>
+                        <td class="px-6 py-4 uppercase text-[10px] font-black text-slate-400">${tx.type.replace('_', ' ')}</td>
+                        <td class="px-6 py-4 text-right font-black ${ isInc ? 'text-emerald-600' : (tx.type === 'cashbon' ? 'text-orange-600' : 'text-rose-600')}">${formatIDR(tx.amount)}</td>
                     </tr>
                 `;
 
-                if (isIncome) {
-                    rInc += tx.amount;
-                    categories['Pemasukan'] = (categories['Pemasukan'] || 0) + tx.amount;
-                } else if (tx.type === 'pengeluaran') {
-                    rExp += tx.amount;
-                    categories['Pengeluaran'] = (categories['Pengeluaran'] || 0) + tx.amount;
-                } else if (isCashbon) {
-                    categories['Cashbon'] = (categories['Cashbon'] || 0) + tx.amount;
-                }
+                const label = tx.type.replace('_', ' ');
+                categories[label] = (categories[label] || 0) + tx.amount;
+
+                if (isInc) rInc += tx.amount;
+                else if (tx.type === 'pengeluaran') rExp += tx.amount;
             });
 
             document.getElementById('report-income').innerText = formatIDR(rInc);
@@ -728,7 +731,7 @@
                     labels: Object.keys(categories),
                     datasets: [{
                         data: Object.values(categories),
-                        backgroundColor: ['#4f46e5', '#ef4444', '#f59e0b', '#10b981'],
+                        backgroundColor: ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#6366f1'],
                         hoverOffset: 20,
                         borderWidth: 4,
                         borderColor: '#f8fafc'
@@ -742,7 +745,7 @@
                 }
             });
 
-            const colors = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981'];
+            const colors = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#6366f1'];
             Object.keys(categories).forEach((key, index) => {
                 const totalInCat = Object.values(categories).reduce((a, b) => a + b, 0);
                 const perc = totalInCat > 0 ? Math.round((categories[key] / totalInCat) * 100) : 0;
@@ -769,6 +772,7 @@
             if (type === 'gaji') return 'bg-emerald-600 text-white';
             if (type === 'pemasukan') return 'bg-emerald-100 text-emerald-600';
             if (type === 'cashbon') return 'bg-orange-100 text-orange-600';
+            if (type === 'bayar_cashbon') return 'bg-indigo-100 text-indigo-600';
             return 'bg-rose-100 text-rose-600';
         };
 
