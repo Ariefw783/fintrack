@@ -53,15 +53,6 @@
             animation: blink-animation 1.5s infinite;
         }
 
-        /* Print/Screenshot Specifics */
-        .report-mode {
-            background: white !important;
-            padding: 40px !important;
-            border-radius: 0 !important;
-            box-shadow: none !important;
-        }
-        .report-mode .no-print { display: none !important; }
-
         /* Animation for Calculator */
         @keyframes pulse-glow {
             0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4); }
@@ -70,6 +61,32 @@
         }
         .calc-highlight {
             animation: pulse-glow 2s infinite;
+        }
+
+        .report-mode {
+            background: white !important;
+            padding: 40px !important;
+            border-radius: 0 !important;
+            box-shadow: none !important;
+        }
+        .no-print { display: block; }
+        
+        /* FIX: Agar screenshot/print tidak terpotong saat data sangat banyak */
+        @media print { 
+            .no-print { display: none !important; }
+            body, html { 
+                height: auto !important; 
+                overflow: visible !important; 
+            }
+            #modal-report { 
+                position: absolute !important;
+                overflow: visible !important;
+                display: block !important;
+            }
+            .report-mode {
+                padding: 0 !important;
+            }
+            main { display: none !important; }
         }
     </style>
 </head>
@@ -117,7 +134,7 @@
 
         <div class="p-4 md:p-8 max-w-7xl mx-auto space-y-6 pb-24 md:pb-8">
             
-            <!-- Hero Section: Calculator & Balance -->
+            <!-- Hero Section -->
             <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
                 <!-- Main Balance -->
                 <div class="md:col-span-7 grid grid-cols-1 gap-4">
@@ -142,16 +159,16 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
                             <p class="text-slate-500 font-bold text-[10px] uppercase tracking-wider mb-2">Total Cashbon</p>
-                            <h4 id="display-debt" class="text-xl font-bold text-orange-500">Rp 0</h4>
+                            <h4 id="display-debt" class="text-xl font-bold text-orange-600">Rp 0</h4>
                             <div class="w-full bg-slate-100 rounded-full h-1 mt-3">
-                                <div class="bg-orange-500 h-1 rounded-full" style="width: 100%"></div>
+                                <div id="debt-bar" class="bg-orange-500 h-1 rounded-full transition-all duration-1000" style="width: 0%"></div>
                             </div>
                         </div>
                         <div class="bg-white rounded-3xl p-5 shadow-sm border border-slate-200">
                             <p class="text-slate-500 font-bold text-[10px] uppercase tracking-wider mb-2">Potensi Tabungan</p>
                             <h4 id="display-savings" class="text-xl font-bold text-emerald-600">Rp 0</h4>
                             <div class="w-full bg-slate-100 rounded-full h-1 mt-3">
-                                <div id="savings-bar" class="bg-emerald-500 h-1 rounded-full" style="width: 0%"></div>
+                                <div id="savings-bar" class="bg-emerald-500 h-1 rounded-full transition-all duration-1000" style="width: 0%"></div>
                             </div>
                         </div>
                     </div>
@@ -208,21 +225,21 @@
                         </select>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-12 gap-6">
-                        <div class="md:col-span-8 h-64 w-full">
+                        <div class="md:col-span-7 h-64 w-full">
                             <canvas id="financeChart"></canvas>
                         </div>
-                        <div class="md:col-span-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                        <div class="md:col-span-5 bg-slate-50 p-4 rounded-2xl border border-slate-100 overflow-y-auto max-h-64">
                             <h4 class="text-xs font-black text-indigo-600 uppercase mb-3 flex items-center gap-2">
-                                <i class="fas fa-lightbulb"></i> Analisa & Tips Cerdas
+                                <i class="fas fa-lightbulb"></i> Tips & Analisa Cerdas
                             </h4>
                             <div id="ai-analysis-text" class="text-[11px] leading-relaxed text-slate-600 space-y-3">
-                                <p>Menghitung data Anda...</p>
+                                <p>Menghitung analisa keuangan Anda...</p>
                             </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- Quick Actions & Fixed Cost -->
+                <!-- Quick Actions -->
                 <div class="space-y-6">
                     <div class="bg-white rounded-3xl p-6 shadow-sm border border-slate-200 h-full">
                         <h3 class="font-bold text-slate-800 mb-4">Aksi Cepat</h3>
@@ -244,7 +261,7 @@
                 </div>
             </div>
 
-            <!-- Recent Transactions List -->
+            <!-- Recent Transactions -->
             <div class="bg-white rounded-3xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                     <h3 class="font-bold text-slate-800">Riwayat Transaksi</h3>
@@ -304,8 +321,8 @@
                                 <option value="gaji">Gaji Bulanan</option>
                                 <option value="pemasukan">Pemasukan Lain</option>
                                 <option value="pengeluaran">Pengeluaran</option>
-                                <option value="cashbon">Pemberian Cashbon (Catatan)</option>
-                                <option value="bayar_cashbon">Terima Bayar Cashbon (Masuk ke Saldo)</option>
+                                <option value="cashbon">Cashbon</option>
+                                <option value="bayar_cashbon">Bayar Cashbon</option>
                             </select>
                             <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-slate-700">
                                 <i class="fas fa-chevron-down text-xs"></i>
@@ -320,7 +337,7 @@
 
                 <div>
                     <label class="block text-xs font-bold text-slate-500 mb-1 uppercase">Keterangan</label>
-                    <input type="text" id="inp-desc" placeholder="Contoh: Belanja Bulanan atau Nama Peminjam" class="w-full bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:border-primary" required>
+                    <input type="text" id="inp-desc" placeholder="Contoh: Pinjaman Teman" class="w-full bg-slate-50 border border-slate-200 text-slate-700 py-3 px-4 rounded-xl focus:outline-none focus:border-primary" required>
                 </div>
 
                 <div>
@@ -338,22 +355,34 @@
         </div>
     </div>
 
-    <!-- MODAL: Report & Screenshot -->
+    <!-- MODAL: Alert Saldo Tidak Mencukupi -->
+    <div id="modal-alert" class="fixed inset-0 bg-dark/90 backdrop-blur-md z-[100] hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden p-8 text-center">
+            <div class="w-20 h-20 bg-rose-100 text-rose-600 rounded-full flex items-center justify-center mx-auto mb-6 text-3xl">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="text-xl font-black text-slate-900 mb-2">Transaksi Gagal</h3>
+            <p class="text-slate-500 mb-8">Saldo utama tidak mencukupi untuk melakukan transaksi ini.</p>
+            <button onclick="document.getElementById('modal-alert').classList.add('hidden')" class="w-full bg-dark text-white font-bold py-4 rounded-xl hover:bg-slate-800 transition">
+                MENGERTI
+            </button>
+        </div>
+    </div>
+
+    <!-- MODAL: Report -->
     <div id="modal-report" class="fixed inset-0 bg-white z-[60] hidden overflow-y-auto">
         <div class="max-w-4xl mx-auto min-h-screen relative bg-white shadow-2xl">
             <div class="sticky top-0 bg-white/95 backdrop-blur border-b border-slate-200 p-4 flex justify-between items-center no-print z-10">
                 <button onclick="closeReportModal()" class="text-slate-500 hover:text-slate-800 flex items-center gap-2 font-bold">
-                    <i class="fas fa-arrow-left"></i> TUTUP LAPORAN
+                    <i class="fas fa-arrow-left"></i> TUTUP
                 </button>
                 <div class="flex gap-2">
                     <select id="report-period" onchange="generateReport()" class="bg-slate-100 border border-slate-200 text-sm rounded-lg px-3 py-2">
-                        <option value="today">Hari Ini</option>
-                        <option value="week">Minggu Ini</option>
                         <option value="month" selected>Bulan Ini</option>
                         <option value="year">Tahun Ini</option>
                     </select>
-                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-black">
-                        <i class="fas fa-camera mr-1"></i> Screenshot/Print
+                    <button onclick="window.print()" class="bg-slate-800 text-white px-4 py-2 rounded-lg text-sm font-medium">
+                        <i class="fas fa-camera mr-1"></i> Screenshot
                     </button>
                 </div>
             </div>
@@ -365,7 +394,7 @@
                         <p class="text-slate-500 mt-1 uppercase tracking-widest font-bold" id="report-subtitle">Periode: Bulan Ini</p>
                     </div>
                     <div class="text-right">
-                        <div class="text-2xl font-black text-primary italic">FINTRACK by ARFWCVK</div>
+                        <div class="text-2xl font-black text-primary italic">FINTRACK PRO</div>
                         <p class="text-[10px] text-slate-400 mt-1" id="report-date">Generated: Now</p>
                     </div>
                 </div>
@@ -385,24 +414,9 @@
                     </div>
                 </div>
 
-                <div class="mb-12">
-                    <h3 class="font-black text-xl text-slate-800 mb-6 border-l-8 border-primary pl-4 uppercase italic">Analisis Kategori</h3>
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-10 items-center bg-slate-50 p-8 rounded-3xl">
-                        <div class="md:col-span-5 flex justify-center">
-                             <div class="w-full max-w-[240px]">
-                                <canvas id="reportChart"></canvas>
-                             </div>
-                        </div>
-                        <div class="md:col-span-7">
-                            <div class="space-y-4" id="report-categories">
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div>
+                <div id="report-table-container">
                     <h3 class="font-black text-xl text-slate-800 mb-6 border-l-8 border-primary pl-4 uppercase italic">Rincian Transaksi</h3>
-                    <div class="overflow-hidden rounded-2xl border border-slate-200">
+                    <div class="overflow-visible rounded-2xl border border-slate-200">
                         <table class="w-full text-sm text-left text-slate-600">
                             <thead class="bg-dark text-white text-[10px] uppercase font-black">
                                 <tr>
@@ -416,10 +430,6 @@
                             </tbody>
                         </table>
                     </div>
-                </div>
-
-                <div class="mt-16 text-center pt-8 border-t border-slate-200">
-                    <p class="text-xs text-slate-400 font-bold tracking-widest uppercase">Dokumen Rahasia & Pribadi • FinTrack Digital System</p>
                 </div>
             </div>
         </div>
@@ -454,22 +464,15 @@
         const auth = getAuth(app);
         const appId = "household-finance-pro-v2";
 
-        let currentUser = null;
         let allTransactions = [];
         let financeChartInstance = null;
-        let reportChartInstance = null;
-
-        const chartAnimation = {
-            duration: 1500,
-            easing: 'easeInOutQuart'
-        };
+        let globalCurrentBalance = 0;
 
         const init = async () => {
             moment.locale('id');
             await signInAnonymously(auth);
             onAuthStateChanged(auth, (user) => {
                 if (user) {
-                    currentUser = user;
                     setupRealtimeListener();
                     document.getElementById('inp-date').valueAsDate = new Date();
                 }
@@ -481,298 +484,165 @@
             onSnapshot(q, (snapshot) => {
                 allTransactions = [];
                 snapshot.forEach(doc => { allTransactions.push({ id: doc.id, ...doc.data() }); });
-                allTransactions.sort((a, b) => {
-                    const dateA = new Date(a.date);
-                    const dateB = new Date(b.date);
-                    if (dateB - dateA !== 0) return dateB - dateA;
-                    return (b.createdAt?.seconds || 0) - (a.createdAt?.seconds || 0);
-                });
+                allTransactions.sort((a, b) => new Date(b.date) - new Date(a.date));
                 renderDashboard();
-                showToastMsg("Data diperbarui");
-            }, (err) => console.error(err));
+            });
         };
 
         const renderDashboard = () => {
-            let totalIncome = 0;
-            let totalExpense = 0;
-            let totalDebt = 0; // Piutang yang diberikan
-            let totalPaidDebt = 0; // Piutang yang dikembalikan
+            let totalInc = 0;
+            let totalExp = 0;
+            let currentDebt = 0;
             
             const tbody = document.getElementById('transaction-table-body');
-            const emptyState = document.getElementById('empty-state');
             tbody.innerHTML = '';
 
-            if (allTransactions.length === 0) {
-                emptyState.classList.remove('hidden');
-            } else {
-                emptyState.classList.add('hidden');
-                allTransactions.slice(0, 10).forEach(tx => {
+            allTransactions.forEach(tx => {
+                // Calculation Logic
+                if (tx.type === 'pemasukan' || tx.type === 'gaji') totalInc += tx.amount;
+                else if (tx.type === 'pengeluaran' || tx.type === 'bayar_cashbon') totalExp += tx.amount;
+                
+                // Debt logic specifically for visual cards
+                if (tx.type === 'cashbon') currentDebt += tx.amount;
+                else if (tx.type === 'bayar_cashbon') currentDebt -= tx.amount;
+
+                // Render Table (limited to 10)
+                if (tbody.children.length < 10) {
+                    const isPositive = (tx.type === 'pemasukan' || tx.type === 'gaji');
                     const row = `
                         <tr class="hover:bg-slate-50 transition group">
-                            <td class="px-6 py-4 font-medium text-slate-800">${moment(tx.date).format('DD MMM YYYY')}</td>
+                            <td class="px-6 py-4 font-medium">${moment(tx.date).format('DD MMM')}</td>
                             <td class="px-6 py-4 font-semibold">${tx.desc}</td>
                             <td class="px-6 py-4">
                                 <span class="text-[10px] font-black px-2 py-1 rounded-lg uppercase ${getBadgeColor(tx.type)}">
                                     ${tx.type.replace('_', ' ')}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 text-right font-black ${ (tx.type === 'pemasukan' || tx.type === 'gaji' || tx.type === 'bayar_cashbon') ? 'text-success' : (tx.type === 'cashbon' ? 'text-orange-500' : 'text-danger')}">
+                            <td class="px-6 py-4 text-right font-black ${ isPositive ? 'text-success' : 'text-danger'}">
                                 ${formatIDR(tx.amount)}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <button onclick="window.deleteTx('${tx.id}')" class="text-slate-300 hover:text-danger transition">
-                                    <i class="fas fa-trash"></i>
-                                </button>
+                                <button onclick="window.deleteTx('${tx.id}')" class="text-slate-300 hover:text-danger"><i class="fas fa-trash"></i></button>
                             </td>
-                        </tr>
-                    `;
+                        </tr>`;
                     tbody.innerHTML += row;
-                });
-            }
-
-            allTransactions.forEach(tx => {
-                if (tx.type === 'pemasukan' || tx.type === 'gaji') {
-                    totalIncome += tx.amount;
-                } else if (tx.type === 'pengeluaran') {
-                    totalExpense += tx.amount;
-                } else if (tx.type === 'cashbon') {
-                    // Hanya sebagai catatan piutang, tidak masuk ke saldo/pengeluaran
-                    totalDebt += tx.amount;
-                } else if (tx.type === 'bayar_cashbon') {
-                    // Piutang dibayar, uang masuk ke saldo
-                    totalPaidDebt += tx.amount;
-                    totalIncome += tx.amount;
                 }
             });
 
-            const currentBalance = totalIncome - totalExpense;
-            // Sisa Cashbon = Total piutang diberikan - Total piutang dibayar
-            const netDebt = Math.max(0, totalDebt - totalPaidDebt);
-
-            document.getElementById('display-balance').innerText = formatIDR(currentBalance);
-            document.getElementById('display-income').innerText = formatIDR(totalIncome);
-            document.getElementById('display-expense').innerText = formatIDR(totalExpense);
-            document.getElementById('display-debt').innerText = formatIDR(netDebt);
-            document.getElementById('display-savings').innerText = formatIDR(Math.max(0, currentBalance));
+            globalCurrentBalance = totalInc - totalExp;
+            document.getElementById('display-balance').innerText = formatIDR(globalCurrentBalance);
+            document.getElementById('display-income').innerText = formatIDR(totalInc);
+            document.getElementById('display-expense').innerText = formatIDR(totalExp);
+            document.getElementById('display-debt').innerText = formatIDR(currentDebt);
+            document.getElementById('display-savings').innerText = formatIDR(Math.max(0, globalCurrentBalance));
             
-            const savingsPercent = totalIncome > 0 ? (currentBalance / totalIncome) * 100 : 0;
+            // Bars
+            const savingsPercent = totalInc > 0 ? (globalCurrentBalance / totalInc) * 100 : 0;
             document.getElementById('savings-bar').style.width = `${Math.min(100, Math.max(0, savingsPercent))}%`;
+            document.getElementById('debt-bar').style.width = currentDebt > 0 ? '100%' : '0%';
 
-            updateCalculatorUI(currentBalance);
+            updateCalculatorUI(globalCurrentBalance);
             updateCharts();
-            generateFinancialInsights(currentBalance, totalIncome, totalExpense, netDebt);
+            updateAnalysis(globalCurrentBalance, totalInc, totalExp, currentDebt);
+        };
+
+        const updateAnalysis = (balance, income, expense, debt) => {
+            const container = document.getElementById('ai-analysis-text');
+            const ratio = income > 0 ? (expense / income) * 100 : 0;
+            let tips = "";
+
+            if (income === 0) {
+                tips = "<p><i class='fas fa-info-circle'></i> Belum ada data pemasukan. Ayo catat gaji Anda!</p>";
+            } else {
+                if (ratio > 80) {
+                    tips += `<p class='text-danger font-bold'><i class='fas fa-exclamation-triangle'></i> WASPADA! Pengeluaran sudah ${Math.round(ratio)}% dari gaji.</p>`;
+                    tips += "<p>• Tips: Stop belanja non-kebutuhan. Prioritaskan sisa saldo untuk makan & transport saja.</p>";
+                } else {
+                    tips += `<p class='text-success font-bold'><i class='fas fa-check-circle'></i> Kondisi AMAN. Baru terpakai ${Math.round(ratio)}%.</p>`;
+                    tips += "<p>• Tips: Bagus! Teruskan pola ini. Cobalah pindahkan sisa saldo ke tabungan terpisah agar tidak 'gatal' belanja.</p>";
+                }
+            }
+
+            if (debt > 0) {
+                tips += `<div class='mt-4 p-3 bg-orange-100 rounded-xl border border-orange-200'>
+                    <p class='font-bold text-orange-800 text-[10px] uppercase'>Catatan Piutang</p>
+                    <p class='text-orange-700'>Masih ada pinjaman luar sebesar <b>${formatIDR(debt)}</b>. Tagih secara berkala agar tidak menjadi kerugian.</p>
+                </div>`;
+            } else if (debt < 0) {
+                tips += `<p class='text-indigo-600 font-bold mt-3'><i class='fas fa-award'></i> Hebat! Anda telah melunasi catatan pinjaman.</p>`;
+            }
+
+            container.innerHTML = tips;
         };
 
         const updateCalculatorUI = (balance = 0) => {
             const now = new Date();
-            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            const totalDaysInMonth = lastDay.getDate();
-            const todayDate = now.getDate();
-            const daysRemaining = totalDaysInMonth - todayDate + 1;
+            const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate();
+            const today = now.getDate();
+            const daysRemaining = lastDay - today + 1;
 
-            const percentPassed = (todayDate / totalDaysInMonth) * 100;
-            
+            const percent = (today / lastDay) * 100;
             document.getElementById('calc-days').innerText = daysRemaining;
-            document.getElementById('calc-percent').innerText = `${Math.round(percentPassed)}%`;
-            document.getElementById('calc-label-percent').innerText = `${Math.round(percentPassed)}%`;
-            document.getElementById('calc-bar').style.width = `${percentPassed}%`;
+            document.getElementById('calc-percent').innerText = `${Math.round(percent)}%`;
+            document.getElementById('calc-label-percent').innerText = `${Math.round(percent)}%`;
+            document.getElementById('calc-bar').style.width = `${percent}%`;
 
-            const dailyBudget = balance > 0 ? Math.floor(balance / daysRemaining) : 0;
-            document.getElementById('calc-daily').innerText = formatIDR(dailyBudget);
-
-            const dailyEl = document.getElementById('calc-daily');
-            if(dailyBudget < 50000) dailyEl.className = 'text-5xl font-black text-danger mb-1 animate-blink';
-            else dailyEl.className = 'text-5xl font-black text-indigo-600 mb-1 animate-blink';
-        };
-
-        const generateFinancialInsights = (balance, income, expense, netDebt) => {
-            const container = document.getElementById('ai-analysis-text');
-            const ratio = income > 0 ? (expense / income) * 100 : 0;
-            
-            let html = "";
-            if (income === 0) {
-                html = "<div class='flex gap-2'><i class='fas fa-info-circle text-primary mt-1'></i> <p>Belum ada pemasukan yang tercatat. Segera masukkan data Gaji agar analisa aktif.</p></div>";
-            } else {
-                if (ratio > 80) {
-                    html += `<div class='flex gap-2'><i class='fas fa-exclamation-triangle text-danger mt-1'></i> <p class='text-danger font-bold'>Waspada! Pengeluaran sudah mencapai ${Math.round(ratio)}% dari pendapatan.</p></div>`;
-                    html += "<p>👉 Batasi belanja non-primer dan prioritaskan tagihan wajib agar sisa saldo cukup.</p>";
-                } else if (ratio > 50) {
-                    html += `<div class='flex gap-2'><i class='fas fa-chart-line text-warning mt-1'></i> <p class='text-warning font-bold'>Cukup Aman. Pengeluaran di angka ${Math.round(ratio)}%.</p></div>`;
-                    html += "<p>👉 Coba alokasikan sisa saldo ke tabungan darurat minimal 10% hari ini.</p>";
-                } else {
-                    html += `<div class='flex gap-2'><i class='fas fa-check-circle text-success mt-1'></i> <p class='text-success font-bold'>Kesehatan keuangan sangat baik (${Math.round(ratio)}%).</p></div>`;
-                    html += "<p>👉 Momentum yang bagus untuk melakukan investasi atau belanja kebutuhan yang tertunda.</p>";
-                }
-            }
-
-            if (netDebt > 0) {
-                html += `<div class='mt-4 p-3 bg-white rounded-xl border border-slate-200'>
-                    <p class='font-bold text-slate-800 text-xs mb-1 uppercase tracking-wider'>Status Piutang:</p>
-                    <p class='text-orange-600 font-medium'>Masih ada tagihan cashbon senilai <b>${formatIDR(netDebt)}</b> yang belum kembali.</p>
-                </div>`;
-            }
-
-            container.innerHTML = html;
+            const daily = balance > 0 ? Math.floor(balance / daysRemaining) : 0;
+            document.getElementById('calc-daily').innerText = formatIDR(daily);
         };
 
         window.updateCharts = () => {
-            const filter = document.getElementById('chart-filter').value;
             const ctx = document.getElementById('financeChart').getContext('2d');
-            
-            let filteredData = [...allTransactions];
-            if (filter === 'month') {
-                const currentMonth = new Date().getMonth();
-                const currentYear = new Date().getFullYear();
-                filteredData = allTransactions.filter(t => {
-                    const d = new Date(t.date);
-                    return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
-                });
-            }
-
-            filteredData.sort((a,b) => new Date(a.date) - new Date(b.date));
-            
-            const labels = filteredData.map(t => moment(t.date).format('DD MMM'));
-            const incomeData = filteredData.map(t => (t.type === 'pemasukan' || t.type === 'gaji' || t.type === 'bayar_cashbon') ? t.amount : 0);
-            const expenseData = filteredData.map(t => t.type === 'pengeluaran' ? t.amount : 0);
+            const sorted = [...allTransactions].reverse();
+            const labels = sorted.map(t => moment(t.date).format('DD/MM'));
+            const incData = sorted.map(t => (t.type === 'pemasukan' || t.type === 'gaji') ? t.amount : 0);
+            const expData = sorted.map(t => (t.type === 'pengeluaran' || t.type === 'bayar_cashbon') ? t.amount : 0);
 
             if (financeChartInstance) financeChartInstance.destroy();
-
             financeChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
-                    labels: labels,
+                    labels,
                     datasets: [
-                        {
-                            label: 'Pemasukan',
-                            data: incomeData,
-                            borderColor: '#10b981',
-                            backgroundColor: 'rgba(16, 185, 129, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#10b981'
-                        },
-                        {
-                            label: 'Pengeluaran',
-                            data: expenseData,
-                            borderColor: '#ef4444',
-                            backgroundColor: 'rgba(239, 68, 68, 0.1)',
-                            fill: true,
-                            tension: 0.4,
-                            pointRadius: 4,
-                            pointBackgroundColor: '#ef4444'
-                        }
+                        { label: 'Masuk', data: incData, borderColor: '#10b981', tension: 0.4, fill: true, backgroundColor: 'rgba(16, 185, 129, 0.05)' },
+                        { label: 'Keluar', data: expData, borderColor: '#ef4444', tension: 0.4, fill: true, backgroundColor: 'rgba(239, 68, 68, 0.05)' }
                     ]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    animation: chartAnimation,
-                    plugins: { legend: { position: 'top', labels: { font: { weight: 'bold', size: 10 } } } },
-                    scales: {
-                        y: { beginAtZero: true, grid: { color: '#f1f5f9' }, ticks: { font: { size: 10 } } },
-                        x: { grid: { display: false }, ticks: { font: { size: 10 } } }
-                    }
-                }
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
             });
         };
 
         window.generateReport = () => {
-            const period = document.getElementById('report-period').value;
             const tbody = document.getElementById('report-table-body');
-            const catContainer = document.getElementById('report-categories');
             tbody.innerHTML = '';
-            catContainer.innerHTML = '';
-
-            document.getElementById('report-date').innerText = moment().format('LLLL');
-            
-            let filtered = [];
-            const now = moment();
-            
-            if (period === 'today') filtered = allTransactions.filter(t => moment(t.date).isSame(now, 'day'));
-            else if (period === 'week') filtered = allTransactions.filter(t => moment(t.date).isSame(now, 'week'));
-            else if (period === 'month') filtered = allTransactions.filter(t => moment(t.date).isSame(now, 'month'));
-            else if (period === 'year') filtered = allTransactions.filter(t => moment(t.date).isSame(now, 'year'));
-            
-            filtered.sort((a,b) => new Date(b.date) - new Date(a.date));
-
             let rInc = 0, rExp = 0;
-            let categories = {};
+            
+            allTransactions.forEach(tx => {
+                const isExpense = (tx.type === 'pengeluaran' || tx.type === 'bayar_cashbon');
+                const isIncome = (tx.type === 'pemasukan' || tx.type === 'gaji');
 
-            filtered.forEach(tx => {
-                const isInc = (tx.type === 'pemasukan' || tx.type === 'gaji' || tx.type === 'bayar_cashbon');
+                if (isIncome) rInc += tx.amount;
+                else if (isExpense) rExp += tx.amount;
+
                 tbody.innerHTML += `
-                    <tr class="border-b border-slate-50">
-                        <td class="px-6 py-4 font-medium">${moment(tx.date).format('DD/MM/YYYY')}</td>
-                        <td class="px-6 py-4 font-bold text-slate-800">${tx.desc}</td>
-                        <td class="px-6 py-4 uppercase text-[10px] font-black text-slate-400">${tx.type.replace('_', ' ')}</td>
-                        <td class="px-6 py-4 text-right font-black ${ isInc ? 'text-emerald-600' : (tx.type === 'cashbon' ? 'text-orange-600' : 'text-rose-600')}">${formatIDR(tx.amount)}</td>
-                    </tr>
-                `;
-
-                const label = tx.type.replace('_', ' ');
-                categories[label] = (categories[label] || 0) + tx.amount;
-
-                if (isInc) rInc += tx.amount;
-                else if (tx.type === 'pengeluaran') rExp += tx.amount;
+                    <tr class="border-b">
+                        <td class="px-6 py-4">${moment(tx.date).format('DD/MM/YYYY')}</td>
+                        <td class="px-6 py-4 font-bold">${tx.desc}</td>
+                        <td class="px-6 py-4 uppercase text-[10px] font-black">${tx.type.replace('_',' ')}</td>
+                        <td class="px-6 py-4 text-right font-black ${ isIncome ? 'text-emerald-600' : (isExpense ? 'text-rose-600' : 'text-slate-600')}">${formatIDR(tx.amount)}</td>
+                    </tr>`;
             });
-
             document.getElementById('report-income').innerText = formatIDR(rInc);
             document.getElementById('report-expense').innerText = formatIDR(rExp);
             document.getElementById('report-balance').innerText = formatIDR(rInc - rExp);
-            document.getElementById('report-subtitle').innerText = `Periode: ${period.toUpperCase()}`;
-
-            const ctxR = document.getElementById('reportChart').getContext('2d');
-            if (reportChartInstance) reportChartInstance.destroy();
-
-            reportChartInstance = new Chart(ctxR, {
-                type: 'doughnut',
-                data: {
-                    labels: Object.keys(categories),
-                    datasets: [{
-                        data: Object.values(categories),
-                        backgroundColor: ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#6366f1'],
-                        hoverOffset: 20,
-                        borderWidth: 4,
-                        borderColor: '#f8fafc'
-                    }]
-                },
-                options: { 
-                    responsive: true, 
-                    cutout: '65%',
-                    animation: chartAnimation,
-                    plugins: { legend: { display: false } }
-                }
-            });
-
-            const colors = ['#4f46e5', '#ef4444', '#f59e0b', '#10b981', '#6366f1'];
-            Object.keys(categories).forEach((key, index) => {
-                const totalInCat = Object.values(categories).reduce((a, b) => a + b, 0);
-                const perc = totalInCat > 0 ? Math.round((categories[key] / totalInCat) * 100) : 0;
-                catContainer.innerHTML += `
-                    <div class="flex items-center justify-between p-4 bg-white rounded-2xl border border-slate-100 shadow-sm">
-                        <div class="flex items-center gap-3">
-                            <div class="w-3 h-3 rounded-full" style="background-color: ${colors[index % colors.length]}"></div>
-                            <div>
-                                <p class="text-[10px] font-black text-slate-400 uppercase leading-none mb-1">${key}</p>
-                                <p class="text-sm font-black text-slate-800 leading-none">${formatIDR(categories[key])}</p>
-                            </div>
-                        </div>
-                        <div class="text-right">
-                            <span class="text-lg font-black text-slate-300">${perc}%</span>
-                        </div>
-                    </div>
-                `;
-            });
         };
 
-        const formatIDR = (num) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(num);
-        
-        const getBadgeColor = (type) => {
-            if (type === 'gaji') return 'bg-emerald-600 text-white';
-            if (type === 'pemasukan') return 'bg-emerald-100 text-emerald-600';
-            if (type === 'cashbon') return 'bg-orange-100 text-orange-600';
-            if (type === 'bayar_cashbon') return 'bg-indigo-100 text-indigo-600';
+        const formatIDR = (n) => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n);
+        const getBadgeColor = (t) => {
+            if (t === 'gaji') return 'bg-emerald-600 text-white';
+            if (t === 'pemasukan') return 'bg-emerald-100 text-emerald-600';
+            if (t === 'bayar_cashbon') return 'bg-rose-100 text-rose-600 border border-rose-200';
+            if (t === 'cashbon') return 'bg-orange-100 text-orange-600';
             return 'bg-rose-100 text-rose-600';
         };
 
@@ -783,44 +653,12 @@
             setTimeout(() => t.classList.add('translate-x-full'), 3000);
         };
 
-        window.toggleTransactionModal = () => {
-            document.getElementById('modal-transaction').classList.toggle('hidden');
-        };
-
-        window.openReportModal = () => {
-            document.getElementById('modal-report').classList.remove('hidden');
-            generateReport();
-        };
-
-        window.closeReportModal = () => {
-            document.getElementById('modal-report').classList.add('hidden');
-        };
-
-        window.addFixedExpenses = async () => {
-            if (!currentUser) return;
-            const fixed = [
-                { desc: "BPJS", amount: 110000 },
-                { desc: "Bensin + Rokok", amount: 190000 },
-                { desc: "WIFI", amount: 170000 },
-                { desc: "Paket Data", amount: 30000 },
-                { desc: "BANK Admin", amount: 15000 },
-                { desc: "Lain-lain", amount: 10000 }
-            ];
-            const batchPromises = fixed.map(item => {
-                return addDoc(collection(db, 'artifacts', appId, 'transactions'), {
-                    type: 'pengeluaran',
-                    date: moment().format('YYYY-MM-DD'),
-                    desc: item.desc,
-                    amount: item.amount,
-                    createdAt: serverTimestamp()
-                });
-            });
-            await Promise.all(batchPromises);
-            showToastMsg("Biaya tetap ditambahkan!");
-        };
+        window.toggleTransactionModal = () => document.getElementById('modal-transaction').classList.toggle('hidden');
+        window.openReportModal = () => { document.getElementById('modal-report').classList.remove('hidden'); generateReport(); };
+        window.closeReportModal = () => document.getElementById('modal-report').classList.add('hidden');
 
         window.deleteTx = async (id) => {
-            if(confirm('Hapus permanen?')) {
+            if(confirm('Hapus data?')) {
                 await deleteDoc(doc(db, 'artifacts', appId, 'transactions', id));
                 showToastMsg("Dihapus.");
             }
@@ -832,15 +670,24 @@
             const date = document.getElementById('inp-date').value;
             const desc = document.getElementById('inp-desc').value;
             const amount = parseFloat(document.getElementById('inp-amount').value);
-            await addDoc(collection(db, 'artifacts', appId, 'transactions'), {
-                type, date, desc, amount, createdAt: serverTimestamp()
-            });
+
+            // Perbaikan: Cek jika transaksi adalah pengeluaran (termasuk Bayar Cashbon)
+            const isExpenseAction = (type === 'pengeluaran' || type === 'bayar_cashbon');
+            
+            if (isExpenseAction && amount > globalCurrentBalance) {
+                document.getElementById('modal-alert').classList.remove('hidden');
+                return;
+            }
+
+            await addDoc(collection(db, 'artifacts', appId, 'transactions'), { type, date, desc, amount, createdAt: serverTimestamp() });
             window.toggleTransactionModal();
             document.getElementById('finance-form').reset();
             document.getElementById('inp-date').valueAsDate = new Date();
+            showToastMsg("Data disimpan.");
         });
 
         init();
     </script>
 </body>
 </html>
+
