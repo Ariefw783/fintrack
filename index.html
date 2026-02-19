@@ -468,7 +468,7 @@
         };
 
         const setupRealtimeListener = () => {
-            const q = query(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions'));
+            const q = query(collection(db, 'artifacts', appId, 'transactions'));
             onSnapshot(q, (snapshot) => {
                 allTransactions = [];
                 snapshot.forEach(doc => { allTransactions.push({ id: doc.id, ...doc.data() }); });
@@ -758,7 +758,7 @@
                 { desc: "Lain-lain", amount: 10000 }
             ];
             const batchPromises = fixed.map(item => {
-                return addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions'), {
+                return addDoc(collection(db, 'artifacts', appId, 'transactions'), {
                     type: 'pengeluaran',
                     date: moment().format('YYYY-MM-DD'),
                     desc: item.desc,
@@ -772,7 +772,7 @@
 
         window.deleteTx = async (id) => {
             if(confirm('Hapus permanen?')) {
-                await deleteDoc(doc(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions', id));
+                await deleteDoc(doc(db, 'artifacts', appId, 'transactions', id));
                 showToastMsg("Dihapus.");
             }
         };
@@ -783,7 +783,7 @@
             const date = document.getElementById('inp-date').value;
             const desc = document.getElementById('inp-desc').value;
             const amount = parseFloat(document.getElementById('inp-amount').value);
-            await addDoc(collection(db, 'artifacts', appId, 'users', currentUser.uid, 'transactions'), {
+            await addDoc(collection(db, 'artifacts', appId, 'transactions'), {
                 type, date, desc, amount, createdAt: serverTimestamp()
             });
             window.toggleTransactionModal();
@@ -794,4 +794,4 @@
         init();
     </script>
 </body>
-</html>
+</html> 
