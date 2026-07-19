@@ -101,9 +101,13 @@
 
     <!-- Main Content -->
     <main class="flex-1 h-full overflow-y-auto relative w-full pb-32 md:pb-8">
-        <!-- Mobile Header -->
-        <div class="md:hidden bg-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md">
+        <!-- Mobile Header (Ditambahkan Tombol Instal di Sebelah Judul) -->
+        <div class="md:hidden bg-dark text-white p-4 flex justify-between items-center sticky top-0 z-30 shadow-md gap-2">
             <h1 class="font-bold text-sm"><i class="fas fa-wallet text-primary mr-1"></i>PENGELOLA KEUANGAN MAMA FITRI</h1>
+            <!-- Tombol Instalasi PWA (Secara default disembunyikan sampai dideteksi oleh browser) -->
+            <button id="pwa-install-btn" class="hidden bg-primary hover:bg-indigo-700 text-white px-3 py-1.5 rounded-lg text-[10px] font-bold shadow-lg active:scale-95 transition flex items-center gap-1 shrink-0 whitespace-nowrap">
+                <i class="fas fa-download"></i> INSTAL
+            </button>
         </div>
 
         <div class="p-3 md:p-6 max-w-6xl mx-auto space-y-4 md:space-y-6">
@@ -194,7 +198,7 @@
         <button onclick="location.reload()" class="flex flex-col items-center gap-1 text-primary">
             <i class="fas fa-home text-lg"></i> <span class="text-[8px] font-bold uppercase">Home</span>
         </button>
-        <!-- Tombol + Transaksi (Sekarang di Tengah) -->
+        <!-- Tombol + Transaksi (Sekarnag di Tengah) -->
         <button onclick="toggleTransactionModal()" class="flex flex-col items-center gap-1 text-primary hover:text-indigo-700 transition">
             <i class="fas fa-plus-circle text-2xl"></i> <span class="text-[8px] font-bold uppercase">Transaksi</span>
         </button>
@@ -347,6 +351,7 @@
         let allTransactions = [];
         let globalBalance = 0;
         let globalDebt = 0;
+        let deferredPrompt; // Variabel global untuk menyimpan event instalasi PWA
 
         moment.locale('id');
 
@@ -380,6 +385,42 @@
                         .catch((err) => console.warn('Pendaftaran Service Worker terhambat:', err));
                 });
             }
+
+            // Logika menangkap perintah instalasi kustom dari browser
+            const installBtn = document.getElementById('pwa-install-btn');
+
+            window.addEventListener('beforeinstallprompt', (e) => {
+                // Mencegah browser menampilkan prompt instalasi bawaan secara otomatis
+                e.preventDefault();
+                // Simpan event agar bisa dipicu saat tombol kita diklik
+                deferredPrompt = e;
+                // Memunculkan tombol instal di header atas
+                if (installBtn) {
+                    installBtn.classList.remove('hidden');
+                }
+            });
+
+            if (installBtn) {
+                installBtn.addEventListener('click', async () => {
+                    if (!deferredPrompt) return;
+                    // Tampilkan jendela prompt instalasi bawaan browser
+                    deferredPrompt.prompt();
+                    // Tunggu keputusan dari pengguna (apakah klik pasang atau batal)
+                    const { outcome } = await deferredPrompt.userChoice;
+                    console.log(`Respon pengguna terhadap instalasi: ${outcome}`);
+                    // Hapus perintah karena prompt hanya bisa digunakan satu kali
+                    deferredPrompt = null;
+                    // Sembunyikan kembali tombol instalasi
+                    installBtn.classList.add('hidden');
+                });
+            }
+
+            window.addEventListener('appinstalled', () => {
+                console.log('Aplikasi FinTrack berhasil diinstal!');
+                if (installBtn) {
+                    installBtn.classList.add('hidden');
+                }
+            });
 
             await signInAnonymously(auth);
             onAuthStateChanged(auth, (user) => {
